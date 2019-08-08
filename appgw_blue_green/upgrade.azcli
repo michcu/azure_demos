@@ -1,0 +1,49 @@
+#Set variables
+RG_NAME="AGTest"
+GATEWAY_NAME="myAppGateway"
+BEPOOL_NAME="blueBackendPool"
+VMSS_NAME="vmssblue"
+ADMIN_NAME="azureuser"
+ADMIN_PASS=""
+
+#Create new backend pool
+
+az network application-gateway address-pool create \
+--gateway-name $GATEWAY_NAME \
+--resource-group $RG_NAME \
+--name $BEPOOL_NAME
+
+#Create blue VMSS
+
+az vmss create \
+  --name $VMSS_NAME \
+  --resource-group $RG_NAME \
+  --image UbuntuLTS \
+  --admin-username $ADMIN_NAME \
+  --admin-password $ADMIN_PASS \
+  --instance-count 2 \
+  --vnet-name myVNet \
+  --subnet myBackendSubnet \
+  --vm-sku Standard_B1s \
+  --upgrade-policy-mode Automatic \
+  --app-gateway $GATEWAY_NAME \
+  --backend-pool-name $BEPOOL_NAME
+
+#Add app code
+
+az vmss extension set \
+  --publisher Microsoft.Azure.Extensions \
+  --version 2.0 \
+  --name CustomScript \
+  --resource-group $RG_NAME \
+  --vmss-name $VMSS_NAME \
+  --settings '{ "fileUris": ["https://raw.githubusercontent.com/michcu/azure_demos/master/app_blue_green/appcode/install_blue.sh"], "commandToExecute": "./install_blue.sh" }'
+
+
+  #Reroute traffic
+
+  az network application-gateway rule update \
+  --address-pool $BEPOOL_NAME \
+  --gateway-name $GATEWAY_NAME \
+  --name rule1 \
+  --resource-group $RG_NAME

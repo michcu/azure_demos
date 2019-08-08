@@ -1,0 +1,59 @@
+#Set variables
+RG_NAME="AGTest"
+GATEWAY_NAME="myAppGateway"
+ADMIN_NAME="azureuser"
+ADMIN_PASS=""
+
+az group create --name $RG_NAME --location eastus
+
+az network vnet create \
+  --name myVNet \
+  --resource-group $RG_NAME \
+  --location eastus \
+  --address-prefix 10.0.0.0/16 \
+  --subnet-name myAGSubnet \
+  --subnet-prefix 10.0.1.0/24
+az network vnet subnet create \
+  --name myBackendSubnet \
+  --resource-group $RG_NAME \
+  --vnet-name myVNet \
+  --address-prefix 10.0.2.0/24
+az network public-ip create \
+  --resource-group $RG_NAME \
+  --name myAGPublicIPAddress
+
+az network application-gateway create \
+  --name $GATEWAY_NAME \
+  --location eastus \
+  --resource-group $RG_NAME \
+  --vnet-name myVNet \
+  --subnet myAGsubnet \
+  --capacity 2 \
+  --sku Standard_Medium \
+  --http-settings-cookie-based-affinity Disabled \
+  --frontend-port 80 \
+  --http-settings-port 80 \
+  --http-settings-protocol Http \
+  --public-ip-address myAGPublicIPAddress
+
+az vmss create \
+  --name vmssgreen \
+  --resource-group $RG_NAME \
+  --image UbuntuLTS \
+  --admin-username $ADMIN_NAME \
+  --admin-password $ADMIN_PASS \
+  --instance-count 2 \
+  --vnet-name myVNet \
+  --subnet myBackendSubnet \
+  --vm-sku Standard_B1s \
+  --upgrade-policy-mode Automatic \
+  --app-gateway $GATEWAY_NAME \
+  --backend-pool-name appGatewayBackendPool
+
+az vmss extension set \
+  --publisher Microsoft.Azure.Extensions \
+  --version 2.0 \
+  --name CustomScript \
+  --resource-group $RG_NAME \
+  --vmss-name vmssgreen \
+ --settings '{ "fileUris": ["https://raw.githubusercontent.com/michcu/azure_demos/master/app_blue_green/appcode/install_green.sh"], "commandToExecute": "./install_green.sh" }'
