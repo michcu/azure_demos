@@ -56,4 +56,4 @@ az vmss extension set \
   --name CustomScript \
   --resource-group $RG_NAME \
   --vmss-name vmssgreen \
- --settings '{ "fileUris": ["https://raw.githubusercontent.com/michcu/azure_demos/master/app_blue_green/appcode/install_green.sh"], "commandToExecute": "./install_green.sh" }'
+ --settings '{ "fileUris": ["https://raw.githubusercontent.com/michcu/azure_demos/master/appgw_blue_green/appcode/install_green.sh"], "commandToExecute": "./install_green.sh" }'

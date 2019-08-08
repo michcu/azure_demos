@@ -37,7 +37,7 @@ az vmss extension set \
   --name CustomScript \
   --resource-group $RG_NAME \
   --vmss-name $VMSS_NAME \
-  --settings '{ "fileUris": ["https://raw.githubusercontent.com/michcu/azure_demos/master/app_blue_green/appcode/install_blue.sh"], "commandToExecute": "./install_blue.sh" }'
+  --settings '{ "fileUris": ["https://raw.githubusercontent.com/michcu/azure_demos/master/appgw_blue_green/appcode/install_blue.sh"], "commandToExecute": "./install_blue.sh" }'
 
 
   #Reroute traffic
